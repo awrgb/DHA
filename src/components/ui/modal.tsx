@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import {
   Dialog,
   DialogContent,
@@ -7,45 +6,30 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import useAuthStore from "@/store";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
+  closeModal: () => void;
+  onVerify: (orgId: string) => Promise<void>;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen }) => {
-  const { closeModal, setUserOrgId } = useAuthStore();
-  const [organizationId, setOrganizationId] = useState("");
+const Modal: React.FC<ModalProps> = ({ isOpen, closeModal, onVerify }) => {
+  const [orgId, setOrgId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    setErrorMessage(null);
+    setErrorMessage('');
     try {
-      const response = await fetch('/api/places/verify-org', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ organizationId }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setUserOrgId(organizationId);
-      } else {
-        setErrorMessage(data.error || 'Invalid organization ID');
-      }
+      await onVerify(orgId);
+      closeModal(); // Close the modal on successful verification
     } catch (error) {
-      console.error('Error verifying organization ID:', error);
-      setErrorMessage('Oops! Something went wrong.');
+      setErrorMessage('Invalid organization ID');
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +37,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className={cn("font-sans", "animate-in", "fade-in-90", "zoom-in-95", "duration-200", "bg-black")}>
+      <DialogContent className="">
         <DialogHeader>
           <DialogTitle className="">
             Enter Organization ID
@@ -62,19 +46,31 @@ const Modal: React.FC<ModalProps> = ({ isOpen }) => {
             Please enter your organization's ID to proceed.
           </DialogDescription>
         </DialogHeader>
-        <Input
-          type="text"
-          value={organizationId}
-          onChange={(e) => setOrganizationId(e.target.value)}
-          placeholder="Organization ID"
-          className="mt-4"
-        />
+        <div className="mt-4">
+          <Input
+            type="text"
+            value={orgId}
+            onChange={(e) => setOrgId(e.target.value)}
+            placeholder="Organization ID"
+            className=""
+          />
+        </div>
         {errorMessage && (
-          <p className="text-red-500 text-sm mt-2 mb-4">{errorMessage}</p>
+          <p className="">{errorMessage}</p>
         )}
         <DialogFooter className="">
-          <Button onClick={handleSubmit} disabled={isLoading} className="font-medium">
-            {isLoading ? "Verifying..." : "Submit"}
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className=""
+          >
+            {isLoading ? 'Verifying...' : 'Verify'}
+          </Button>
+          <Button
+            onClick={closeModal}
+            className=""
+          >
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>

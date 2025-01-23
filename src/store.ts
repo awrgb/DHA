@@ -1,52 +1,58 @@
+// src/store.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
-  isModalOpen: boolean;
+  modalState: { [modalId: string]: boolean }; // Object to track multiple modals
   userOrgId: string | null;
   setUserOrgId: (orgId: string) => void;
-  checkOrg: () => Promise<void>;
-  openModal: () => void;
-  closeModal: () => void;
+  verifyOrg: (orgId: string, modalId: string) => Promise<void>; // Combined verify and set
+  openModal: (modalId: string) => void;
+  closeModal: (modalId: string) => void;
 }
 
 const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      isModalOpen: false,
+      modalState: {},
       userOrgId: null,
       setUserOrgId: (orgId) => {
-        set({ userOrgId: orgId, isModalOpen: false });
+        set({ userOrgId: orgId });
       },
-      checkOrg: async () => {
-        if (get().userOrgId) {
-          try {
-            const response = await fetch('/api/places/verify-org', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ organizationId: get().userOrgId }),
-            });
+      verifyOrg: async (orgId, modalId) => {
+        try {
+          const response = await fetch('/api/places/verify-org', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ organizationId: orgId }),
+          });
 
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success) {
-                set({ isModalOpen: false });
-                return;
-              }
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              set({
+                userOrgId: orgId,
+                modalState: { ...get().modalState, [modalId]: false },
+              });
+            } else {
+              console.error('Verification failed:', data.error);
             }
-          } catch (error) {
-            console.error('Error verifying organization ID:', error);
+          } else {
+            console.error('Verification failed with status:', response.status);
           }
+        } catch (error) {
+          console.error('Error verifying organization ID:', error);
         }
-        set({ isModalOpen: true });
       },
-      openModal: () => {
-        set({ isModalOpen: true });
+      openModal: (modalId: string) => {
+        set((state) => ({
+          modalState: { ...state.modalState, [modalId]: true },
+        }));
       },
-      closeModal: () => {
-        set({ isModalOpen: false });
+      closeModal: (modalId: string) => {
+        set((state) => ({
+          modalState: { ...state.modalState, [modalId]: false },
+        }));
       },
     }),
     {

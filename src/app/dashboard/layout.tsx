@@ -1,50 +1,34 @@
-"use client";
+// src/app/dashboard/layout.tsx
+'use client';
 
-import { useEffect, useState } from 'react';
-import React from 'react';
-import Modal from '@/components/ui/modal';
+import { useEffect } from 'react';
 import useAuthStore from '@/store';
-import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import Modal from '@/components/ui/modal';
 
-interface ProtectedLayoutProps {
-    children: React.ReactNode;
-}
-
-const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
-    const { isModalOpen, checkOrg, userOrgId } = useAuthStore();
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
+    const { userOrgId, modalState, openModal, verifyOrg } = useAuthStore();
+    const orgVerificationModalId = 'orgVerificationModal';
 
     useEffect(() => {
-        const check = async () => {
-            await checkOrg();
-            setLoading(false);
-        };
-        check();
-    }, [checkOrg]);
-
-    useEffect(() => {
-        if (!loading && !userOrgId && !isModalOpen) {
-            router.push('/auth');
+        if (!userOrgId) {
+            openModal(orgVerificationModalId);
         }
-    }, [loading, userOrgId, isModalOpen, router]);
+    }, [userOrgId, openModal, orgVerificationModalId]);
 
-    if (loading) {
-        return <div className="flex items-center justify-center h-screen font-mono">Loading...</div>;
-    }
+    const handleOrgVerification = async (orgId: string) => {
+        await verifyOrg(orgId, orgVerificationModalId);
+    };
 
     return (
-        <div className={cn("text-white bg-black h-full w-full flex flex-col", isModalOpen ? "overflow-hidden" : "")}>
-            {isModalOpen && <Modal isOpen={isModalOpen} />}
-            {!isModalOpen && userOrgId && (
-                <div className="flex-1 flex flex-col">
-                    <p className="text-white text-xl p-4 font-mono text-center">Welcome, User!</p>
-                    <div className="flex-1 overflow-y-auto">
-                        {children}
-                    </div>
-                </div>
+        <div>
+            {modalState[orgVerificationModalId] && (
+                <Modal
+                    isOpen={modalState[orgVerificationModalId]}
+                    closeModal={() => useAuthStore().closeModal(orgVerificationModalId)}
+                    onVerify={handleOrgVerification}
+                />
             )}
+            {children}
         </div>
     );
 };
