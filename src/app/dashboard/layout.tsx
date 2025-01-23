@@ -14,7 +14,6 @@ const ProtectedLayout = ({ children }: { children: React.ReactNode }) => {
             openModal(orgVerificationModalId);
         }
     }, [userOrgId, openModal, orgVerificationModalId]);
-
     const handleOrgVerification = async (orgId: string) => {
         await verifyOrg(orgId, orgVerificationModalId);
     };

@@ -3,10 +3,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AuthState {
-  modalState: { [modalId: string]: boolean }; // Object to track multiple modals
+  modalState: { [modalId: string]: boolean };
   userOrgId: string | null;
   setUserOrgId: (orgId: string) => void;
-  verifyOrg: (orgId: string, modalId: string) => Promise<void>; // Combined verify and set
+  verifyOrg: (orgId: string, modalId: string) => Promise<void>;
   openModal: (modalId: string) => void;
   closeModal: (modalId: string) => void;
 }
@@ -30,6 +30,7 @@ const useAuthStore = create<AuthState>()(
           if (response.ok) {
             const data = await response.json();
             if (data.success) {
+              // Set the userOrgId in the store upon successful verification
               set({
                 userOrgId: orgId,
                 modalState: { ...get().modalState, [modalId]: false },
@@ -56,8 +57,8 @@ const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      name: 'auth-storage', // Unique name for the storage
+      storage: createJSONStorage(() => localStorage), // Use localStorage
     }
   )
 );
