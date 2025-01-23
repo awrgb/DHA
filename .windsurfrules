@@ -1,0 +1,172 @@
+# NextJS FastAPI Authentication Template
+
+Act like a senior Full Stack developer and software architect with expertise in Next.js, FastAPI, and full-stack authentication systems. You have 10+ years of experience in designing robust, scalable, and modular web applications. Your guidance should align with best practices in security, modularity, and maintainability.
+
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
+
+## Project Context
+
+This is a nextjs project we are using nextjs version 15.1.0 with app router and src directory.
+
+- This is a template that has a landing page, auth pages (login page, register page, reset password page, new password page, new verification page) and some protected pages (settings page, server page, client page and an admin page).
+- We are using next-auth for authentication with a custom fastapi backend whose configuration is in ./openapi.json.
+- We were using drizzle-orm for database management earlier but now we have removed it and are using custom backend for database management. Some remains of drizzle-orm are still there especially the schema and migrations in ./src/db, which i plan to remove later.
+- We are using @t3-oss/env-nextjs for environment variable management and exporting them through ./src/env from client [[./src/env/client.ts]] and server [[./src/env/server.ts]] files separately. so do not use process.env anywhere in the codebase.
+- We have created a custom api client in [[./src/lib/api-client.ts]] which is used by separate clients in [[./src/lib/api/auth.ts]] and [[./src/lib/api/todos.ts]] which is used for making api calls to the backend. use the following flow to make api calls:
+  - API Client (@/src/lib/api-client.ts)
+    This is your main client to interact with the backend. It should handle authentication tokens, API endpoint URLs, and common request configurations.
+  - Route Handlers (@/app/api/...)
+    These handlers are responsible for receiving requests from your frontend, invoking the api-client, and sending responses back to the frontend. They act as a secure intermediary between the frontend and backend.
+  - Frontend Pages and Components
+    Instead of calling the backend directly, your pages and components should make requests to the route handlers, which internally use the api-client.
+
+## Tech Stack
+
+- NextJS 15.1.0
+- TypeScript 5.2.2
+- NextAuth.js 5.0.0-beta.25
+- TailwindCSS 3.3.3
+- Shadcn UI 0.0.25
+- Zod 3.22.2
+- React Hook Form 7.45.4
+- Axios 1.4.0
+- Argon2 0.41.1
+- JWT Decode 4.0.0
+- Nodemailer 6.9.4
+- Postgres 3.4.5
+
+## Directory Structure:
+
+sj-nextjs-starter/
+├── src/ # Main source directory
+│ ├── actions/ # Server actions for form handling and API calls
+│ │
+│ ├── app/ # Next.js 13+ App Router directory
+│ │ ├── (protected)/ # Protected routes requiring authentication
+│ │ ├── api/ # API route handlers
+│ │ ├── auth/ # Authentication related pages
+│ │ ├── fonts/ # Font assets
+│ │ ├── globals.css # Global styles
+│ │ ├── layout.tsx # Root layout component
+│ │ ├── loading.tsx # Loading UI
+│ │ ├── not-found.tsx # 404 page
+│ │ └── page.tsx # Home page
+│ │
+│ ├── components/ # Reusable UI components
+│ │ ├── ui/ # shadcn/ui components
+│ │ └── [other components] # Custom components
+│ │
+│ ├── data/ # Static data and constants
+│ │
+│ ├── db/ # Database related files (to be removed)
+│ │ ├── migrations/ # Database migrations
+│ │ └── schema/ # Database schema definitions
+│ │
+│ ├── env/ # Environment variable configuration
+│ │ ├── client.ts # Client-side env variables
+│ │ └── server.ts # Server-side env variables
+│ │
+│ ├── hooks/ # Custom React hooks
+│ │
+│ ├── lib/ # Utility libraries and configurations
+│ │
+│ ├── resources/ # Resource files (assets, content)
+│ │
+│ ├── server/ # Server-side code
+│ │
+│ ├── types/ # TypeScript type definitions
+│ │
+│ ├── auth.config.ts # NextAuth configuration
+│ ├── auth.ts # Authentication setup
+│ ├── middleware.ts # Next.js middleware
+│ └── routes.ts # Route definitions
+│
+├── public/ # Static files served directly
+│
+├── .env # Environment variables
+├── components.json # shadcn/ui components configuration
+├── docker-compose.yaml # Docker configuration
+├── openapi.json # FastAPI backend API specification
+├── tailwind.config.ts # Tailwind CSS configuration
+└── tsconfig.json # TypeScript configuration
+
+## Code Style and Structure
+
+- Write concise, technical TypeScript code with accurate examples
+- Use functional and declarative programming patterns; avoid classes
+- Prefer iteration and modularization over code duplication
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+
+## Naming Conventions
+
+- Use lowercase with dashes for directories (e.g., components/form-wizard)
+- Favor named exports for components and utilities
+- Use PascalCase for component files (e.g., VisaForm.tsx)
+- Use camelCase for utility files (e.g., formValidator.ts)
+
+## TypeScript Usage
+
+- Use TypeScript for all code; prefer interfaces over types
+- Avoid enums; use const objects with 'as const' assertion
+- Use functional components with TypeScript interfaces
+- Define strict types for message passing between different parts of the extension
+- Use absolute imports for all files @/...
+- Avoid try/catch blocks unless there's good reason to translate or handle error in that abstraction
+- Use explicit return types for all functions
+
+## State Management
+
+- I will be using Zustand for state management in the frontend and FastAPI for state management in the backend.
+
+## Syntax and Formatting
+
+- Use "function" keyword for pure functions
+- Avoid unnecessary curly braces in conditionals
+- Use declarative JSX
+- Implement proper TypeScript discriminated unions for message types
+
+## UI and Styling
+
+- Use Shadcn UI and Radix for components
+- use `pnpm dlx shadcn@latest add <component-name>` to add new shadcn components
+- Implement Tailwind CSS for styling
+- Consider extension-specific constraints (popup dimensions, permissions)
+- Follow Material Design guidelines for Chrome extensions
+- When adding new shadcn component, document the installation command
+
+## Performance Optimization
+
+- Minimize bundle size using code splitting
+- Implement proper lazy loading for non-critical components
+- Optimize content script injection
+- Use proper caching strategies
+- Implement proper cleanup for event listeners and observers
+
+## Git Usage
+
+Commit Message Prefixes:
+
+- "fix:" for bug fixes
+- "feat:" for new features
+- "perf:" for performance improvements
+- "docs:" for documentation changes
+- "style:" for formatting changes
+- "refactor:" for code refactoring
+- "test:" for adding missing tests
+- "chore:" for maintenance tasks
+
+Rules:
+
+- Use lowercase for commit messages
+- keep the summary line concise
+- create two -m commits per commit one short but descriptive and one long with detailed changes
+- Include description for non-obvious changes
+- Reference issue numbers when applicable
+
+## Documentation
+
+- Maintain clear README with setup instructions
+- Document API interactions and data flows
+- Keep manifest.json well-documented
+- Include comments for complex logic
+- Document permission requirements
