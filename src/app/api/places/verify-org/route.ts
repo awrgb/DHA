@@ -1,24 +1,31 @@
-// src/app/api/places/verify-org/route.ts
 import { NextResponse } from 'next/server';
 import { placesApi } from '@/lib/api/places';
+
+// In src/types.ts (or a similar file)
+export type Organization = {
+  id: string;
+  name: string;
+  // ... any other properties of your organization objects
+};
 
 export async function POST(request: Request) {
   try {
     const { organizationId } = await request.json();
-    const org = await placesApi.getOrg();
+    const orgs = await placesApi.getOrg();
 
-    console.log("Organizations:", org);
+    console.log("Organizations:", orgs);
 
-    if (!org || !org.length) {
+    if (!orgs || !orgs.length) {
       return NextResponse.json(
         { success: false, error: 'No organizations found' },
         { status: 404 }
       );
     }
 
-    const backendOrgId = org[0].id; // Assuming org[0] is the relevant organization
+    // Check if the provided organizationId exists in the list of orgs
+    const isValidOrg = orgs.some((org) => org.id === organizationId);
 
-    if (organizationId === backendOrgId) {
+    if (isValidOrg) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json(

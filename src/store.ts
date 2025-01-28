@@ -1,14 +1,25 @@
-// src/store.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+
+// Import Organization type (adjust path if needed)
+// import { Organization } from '@/types';
+// Or define it here if it's not defined elsewhere:
+type Organization = {
+  id: string;
+  name: string;
+  // ... other properties of your Organization type
+};
 
 interface AuthState {
   modalState: { [modalId: string]: boolean };
   userOrgId: string | null;
+  orgData: Organization | null; // Add orgData to the state
   setUserOrgId: (orgId: string) => void;
-  verifyOrg: (orgId: string, modalId: string) => Promise<void>;
+  verifyOrg: (orgId: string, modalId: string) => Promise<boolean>;
   openModal: (modalId: string) => void;
   closeModal: (modalId: string) => void;
+  clearUserOrgId: () => void;
+  setOrgData: (orgData: Organization | null) => void;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -16,8 +27,12 @@ const useAuthStore = create<AuthState>()(
     (set, get) => ({
       modalState: {},
       userOrgId: null,
-      setUserOrgId: (orgId) => {
+      orgData: null, // Initialize orgData
+      setUserOrgId: (orgId: string) => {
         set({ userOrgId: orgId });
+      },
+      setOrgData: (orgData: Organization | null) => {
+        set({ orgData: orgData }); // Correctly update orgData
       },
       verifyOrg: async (orgId, modalId) => {
         try {
@@ -27,22 +42,49 @@ const useAuthStore = create<AuthState>()(
             body: JSON.stringify({ organizationId: orgId }),
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-              // Set the userOrgId in the store upon successful verification
-              set({
-                userOrgId: orgId,
-                modalState: { ...get().modalState, [modalId]: false },
-              });
-            } else {
-              console.error('Verification failed:', data.error);
-            }
-          } else {
+          if (!response.ok) {
             console.error('Verification failed with status:', response.status);
+            return false;
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            set({
+              userOrgId: orgId,
+              modalState: { ...get().modalState, [modalId]: false },
+            });
+            // Fetch and set the organization data after successful verification
+            try {
+              const orgResponse = await fetch(
+                `/api/places/get-org-by-id?organizationId=${orgId}`
+              );
+              if (orgResponse.ok) {
+                const orgData = await orgResponse.json();
+                if (orgData.success) {
+                  set({ orgData: orgData.data }); // Correctly update orgData
+                } else {
+                  console.error(
+                    'Failed to fetch organization data:',
+                    orgData.error
+                  );
+                }
+              } else {
+                console.error(
+                  'Failed to fetch organization data with status:',
+                  orgResponse.status
+                );
+              }
+            } catch (error) {
+              console.error('Error fetching organization data:', error);
+            }
+            return true;
+          } else {
+            console.error('Verification failed:', data.error);
+            return false;
           }
         } catch (error) {
           console.error('Error verifying organization ID:', error);
+          return false;
         }
       },
       openModal: (modalId: string) => {
@@ -55,10 +97,13 @@ const useAuthStore = create<AuthState>()(
           modalState: { ...state.modalState, [modalId]: false },
         }));
       },
+      clearUserOrgId: () => {
+        set({ userOrgId: null });
+      },
     }),
     {
-      name: 'auth-storage', // Unique name for the storage
-      storage: createJSONStorage(() => localStorage), // Use localStorage
+      name: 'auth-storage',
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );
